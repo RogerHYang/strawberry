@@ -16,7 +16,7 @@ from typing import (
 )
 
 from opentelemetry import trace
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, TracerProvider
 
 from strawberry.extensions import LifecycleStep, SchemaExtension
 from strawberry.extensions.utils import get_path_from_info
@@ -45,9 +45,10 @@ class OpenTelemetryExtension(SchemaExtension):
         *,
         execution_context: Optional[ExecutionContext] = None,
         arg_filter: Optional[ArgFilter] = None,
+        tracer_provider: Optional[TracerProvider] = None,
     ) -> None:
         self._arg_filter = arg_filter
-        self._tracer = trace.get_tracer("strawberry")
+        self._tracer = (trace if tracer_provider is None else tracer_provider).get_tracer("strawberry")
         if execution_context:
             self.execution_context = execution_context
 
