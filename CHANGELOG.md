@@ -1,6 +1,132 @@
 CHANGELOG
 =========
 
+0.265.1 - 2025-04-15
+--------------------
+
+Fix bug where files would be converted into io.BytesIO when using the sanic GraphQLView
+instead of using the sanic File type
+
+Contributed by [Maypher](https://github.com/Maypher) via [PR #3751](https://github.com/strawberry-graphql/strawberry/pull/3751/)
+
+
+0.265.0 - 2025-04-15
+--------------------
+
+This release adds support for using strawberry.union with generics, like in this
+example:
+
+```python
+@strawberry.type
+class ObjectQueries[T]:
+    @strawberry.field
+    def by_id(
+        self, id: strawberry.ID
+    ) -> Union[T, Annotated[NotFoundError, strawberry.union("ByIdResult")]]: ...
+
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def some_type_queries(self, id: strawberry.ID) -> ObjectQueries[SomeType]: ...
+```
+
+which, now, creates a correct union type named `SomeTypeByIdResult`
+
+Contributed by [Jacob Allen](https://github.com/enoua5) via [PR #3515](https://github.com/strawberry-graphql/strawberry/pull/3515/)
+
+
+0.264.1 - 2025-04-15
+--------------------
+
+Change pydantic conversion to not load field data unless requested
+
+Contributed by [Mark Moes](https://github.com/Mark90) via [PR #3812](https://github.com/strawberry-graphql/strawberry/pull/3812/)
+
+
+0.264.0 - 2025-04-12
+--------------------
+
+This releases improves support for `relay.Edge` subclasses.
+
+`resolve_edge` now accepts `**kwargs`, so custom fields can be added to your edge classes without wholly
+replacing `resolve_edge`:
+```python
+@strawberry.type(name="Edge", description="An edge in a connection.")
+class CustomEdge(relay.Edge[NodeType]):
+    index: int
+
+    @classmethod
+    def resolve_edge(cls, node: NodeType, *, cursor: Any = None, **kwargs: Any) -> Self:
+        assert isinstance(cursor, int)
+        return super().resolve_edge(node, cursor=cursor, index=cursor, **kwargs)
+```
+
+You can also specify a custom cursor prefix, in case you want to implement a different
+kind of cursor than a plain `ListConnection`:
+```python
+@strawberry.type(name="Edge", description="An edge in a connection.")
+class CustomEdge(relay.Edge[NodeType]):
+    CURSOR_PREFIX: ClassVar[str] = "mycursor"
+```
+
+Contributed by [Take Weiland](https://github.com/diesieben07) via [PR #3836](https://github.com/strawberry-graphql/strawberry/pull/3836/)
+
+
+0.263.2 - 2025-04-05
+--------------------
+
+This release contains a few improvements to how `AsyncGenerators` are handled by
+strawberry codebase, ensuring they get properly closed in case of unexpected
+errors.
+
+Contributed by [Thiago Bellini Ribeiro](https://github.com/bellini666) via [PR #3834](https://github.com/strawberry-graphql/strawberry/pull/3834/)
+
+
+0.263.1 - 2025-04-04
+--------------------
+
+This releases add support for passing in a custom `TracerProvider` to the `OpenTelemetryExtension`.
+
+Contributed by [Chase Dorsey](https://github.com/cdorsey) via [PR #3830](https://github.com/strawberry-graphql/strawberry/pull/3830/)
+
+
+0.263.0 - 2025-04-01
+--------------------
+
+Adds the ability to include pydantic computed fields when using pydantic.type decorator.
+
+Example:
+```python
+class UserModel(pydantic.BaseModel):
+    age: int
+
+    @computed_field
+    @property
+    def next_age(self) -> int:
+        return self.age + 1
+
+
+@strawberry.experimental.pydantic.type(
+    UserModel, all_fields=True, include_computed=True
+)
+class User:
+    pass
+```
+
+Will allow `nextAge` to be requested from a user entity.
+
+Contributed by [Tyler Nisonoff](https://github.com/tylernisonoff) via [PR #3798](https://github.com/strawberry-graphql/strawberry/pull/3798/)
+
+
+0.262.6 - 2025-03-28
+--------------------
+
+This release updates the Content-Type header from ⁠`"text/html"` to `⁠"text/html; charset=utf-8"` to prevent the GraphQL IDE from displaying unusual or incorrect characters.
+
+Contributed by [Moritz Ulmer](https://github.com/moritz89) via [PR #3824](https://github.com/strawberry-graphql/strawberry/pull/3824/)
+
+
 0.262.5 - 2025-03-13
 --------------------
 
